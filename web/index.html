@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VocalKeep</title>
+<style>
+  :root { --bg: #f6f5f2; --fg: #1d1d1b; --muted: #6b6a66; --line: #c9c6bf; --accent: #2f6f5e; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecebe7; --muted: #9a9892; --line: #3a3936; --accent: #6fbfa6; } }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 16px; }
+  h1 { margin: 0 0 4px; } p.sub { color: var(--muted); margin: 0 0 20px; }
+  .drop { border: 2px dashed var(--line); border-radius: 12px; padding: 40px 16px; text-align: center; cursor: pointer; }
+  .drop.over { border-color: var(--accent); }
+  .row { margin: 16px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select { font: inherit; padding: 4px 8px; }
+  #status { color: var(--muted); min-height: 1.4em; }
+  video { width: 100%; border-radius: 8px; margin-top: 12px; }
+  a.dl { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>VocalKeep</h1>
+<p class="sub">Drop a video. The music goes, the voices stay. Everything runs on this computer.</p>
+<div class="drop" id="drop">Drag a video here, or click to choose one<br><small>mp4, mov, mkv, webm, avi, m4v, up to 2 GB</small>
+  <input type="file" id="file" accept="video/*" hidden></div>
+<div class="row"><label for="model">Model:</label>
+  <select id="model"><option value="htdemucs">htdemucs (fast)</option><option value="htdemucs_ft">htdemucs_ft (better, about 4x slower)</option></select></div>
+<div id="status"></div>
+<div id="result"></div>
+<script>
+const $ = id => document.getElementById(id);
+const OK = ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'];
+$('drop').onclick = () => $('file').click();
+$('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
+$('drop').ondragleave = () => $('drop').classList.remove('over');
+$('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); start(e.dataTransfer.files); };
+$('file').onchange = () => start($('file').files);
+
+function start(files) {
+  const f = files[0];
+  if (!f) return;
+  if (!OK.includes(f.name.split('.').pop().toLowerCase())) return say('That is not a video file I can read.');
+  if (f.size > 2 * 1024 ** 3) return say('That file is over 2 GB.');
+  $('result').innerHTML = '';
+  say('Uploading ' + f.name + ' ...');
+  fetch('/api/jobs', { method: 'POST', body: f,
+      headers: { 'X-Filename': encodeURIComponent(f.name), 'X-Model': $('model').value } })
+    .then(r => r.ok ? r.json() : r.text().then(t => Promise.reject(new Error(t))))
+    .then(d => poll(d.id, f.name))
+    .catch(e => say('Upload failed: ' + e.message));
+}
+
+function poll(id, name) {
+  fetch('/api/jobs/' + id).then(r => r.json()).then(d => {
+    if (d.state === 'done') {
+      say(`Done in ${d.seconds} s on ${d.device}.`);
+      const url = '/api/jobs/' + id + '/file';
+      $('result').innerHTML = `<video controls src="${url}"></video><p><a class="dl" href="${url}" download>Download the clean video</a></p>`;
+    } else if (d.state === 'error') {
+      say('Failed: ' + d.error);
+    } else {
+      say(d.state === 'queued' ? `Waiting for the GPU (${d.ahead} ahead) ...` : `Removing the music from ${name} ... ${d.seconds} s`);
+      setTimeout(() => poll(id, name), 1000);
+    }
+  }).catch(e => say('Lost the server: ' + e.message));
+}
+function say(t) { $('status').textContent = t; }
+</script>
+</body>
+</html>

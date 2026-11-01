@@ -6,10 +6,18 @@ Strips background music from a video while keeping the speech — for reels, sho
 
 "Remove music from any video, live, on any social media app" is actually three or four different engineering problems bundled into one sentence, and one of them runs into a hard platform wall. Built in phases, each one proving the next is worth attempting before starting it:
 
-- **Phase 1 (this phase): core engine, offline/batch.** A local CLI: video in, speech-only video out. No cloud, no browser, no live processing — just the actual audio separation working correctly and reliably across as much real hardware as possible.
-- **Phase 2: local web UI.** Drag a video in, get the processed one back. Still fully local, still no browser injection — proves the pipeline is usable by something other than a terminal.
+- **Phase 1 (done): core engine, offline/batch.** A local CLI: video in, speech-only video out. No cloud, no browser, no live processing — just the actual audio separation working correctly and reliably across as much real hardware as possible.
+- **Phase 2 (done): local web UI.** Drag a video in, get the processed one back. Still fully local, still no browser injection — proves the pipeline is usable by something other than a terminal.
 - **Phase 3: Chrome extension, offline/batch mode.** Right-click a video or upload one, same processing, talking to a small local backend service (Demucs is too heavy to run inside a browser tab via WASM).
 - **Phase 4: live processing.** Two genuinely different sub-problems: live mode for video the browser can actually access the raw audio of, and a separate Android app using `AudioPlaybackCapture` for live audio from other apps. iOS has no equivalent API for third-party apps under normal App Store rules, so that path doesn't exist here.
+
+## Web UI (Phase 2)
+
+```bash
+.venv/bin/python web/app.py          # then open http://127.0.0.1:8610
+```
+
+Drag a video onto the page, pick the model, watch the preview, download the clean file. It is a small standard-library server (no extra packages), bound to localhost, running one job at a time so the GPU is never shared between two videos. Uploads stream to disk, finished files are deleted an hour later or when you stop the server.
 
 ## How it works
 
