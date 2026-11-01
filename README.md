@@ -1,13 +1,29 @@
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/banner-light.svg">
+  <img src="assets/banner-dark.svg" alt="VocalKeep: keep the voice, remove the music. Offline, on your own GPU." width="100%">
+</picture>
+
+<p>
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg">
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue">
+  <img alt="GPU: NVIDIA, AMD ROCm, CPU" src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD%20ROCm%20%7C%20CPU-14B8A6">
+  <img alt="Runs fully offline" src="https://img.shields.io/badge/runs-fully%20offline-10a37f">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-23%20passing-success">
+</p>
+</div>
+
 # VocalKeep
 
-Strips background music from a video while keeping the speech — for reels, shorts, and clips where the music makes it hard to hear what's actually being said.
+Strips background music from a video while keeping the speech, for reels, shorts, and clips where the music makes it hard to hear what's actually being said.
 
 ## Why this isn't one project pretending to be simple
 
 "Remove music from any video, live, on any social media app" is actually three or four different engineering problems bundled into one sentence, and one of them runs into a hard platform wall. Built in phases, each one proving the next is worth attempting before starting it:
 
-- **Phase 1 (done): core engine, offline/batch.** A local CLI: video in, speech-only video out. No cloud, no browser, no live processing — just the actual audio separation working correctly and reliably across as much real hardware as possible.
-- **Phase 2 (done): local web UI.** Drag a video in, get the processed one back. Still fully local, still no browser injection — proves the pipeline is usable by something other than a terminal.
+- **Phase 1 (done): core engine, offline/batch.** A local CLI: video in, speech-only video out. No cloud, no browser, no live processing, just the actual audio separation working correctly and reliably across as much real hardware as possible.
+- **Phase 2 (done): local web UI.** Drag a video in, get the processed one back. Still fully local, still no browser injection. It proves the pipeline is usable by something other than a terminal.
 - **Phase 3: Chrome extension, offline/batch mode.** Right-click a video or upload one, same processing, talking to a small local backend service (Demucs is too heavy to run inside a browser tab via WASM).
 - **Phase 4: live processing.** Two genuinely different sub-problems: live mode for video the browser can actually access the raw audio of, and a separate Android app using `AudioPlaybackCapture` for live audio from other apps. iOS has no equivalent API for third-party apps under normal App Store rules, so that path doesn't exist here.
 
@@ -23,11 +39,11 @@ Drag a video onto the page, pick the model, watch the preview, download the clea
 
 [Demucs](https://github.com/facebookresearch/demucs) (Meta's open-source music source-separation model) splits the audio into a vocals stem and everything else. `ffmpeg` extracts the original audio, Demucs runs the separation, and the vocals stem gets remuxed back against the original video, replacing the original mixed track.
 
-## Built to run on real, varied hardware — not just the one machine it was written on
+## Built to run on real, varied hardware, not just the one machine it was written on
 
-The compute backend is chosen automatically, in this order: NVIDIA (CUDA), AMD (ROCm on Linux), Apple Silicon (MPS), Intel Iris/Arc (via `intel_extension_for_pytorch`'s XPU backend), falling back to CPU if none of those work. The one rule enforced throughout: **a backend reporting itself as "available" is not verified as actually working.** Every candidate is tested with a real tiny tensor operation before being trusted — this project's own dev machine has a real, live example of why that matters: an old NVIDIA MX330 (Pascal architecture) that `torch.cuda.is_available()` reports as present, but that current PyTorch builds no longer ship compiled kernels for at all. Trusting the availability flag alone would pick a device that crashes on the very first real operation; `core/device.py` catches that and falls back to CPU cleanly instead.
+The compute backend is chosen automatically, in this order: NVIDIA (CUDA), AMD (ROCm on Linux), Apple Silicon (MPS), Intel Iris/Arc (via `intel_extension_for_pytorch`'s XPU backend), falling back to CPU if none of those work. The one rule enforced throughout: **a backend reporting itself as "available" is not verified as actually working.** Every candidate is tested with a real tiny tensor operation before being trusted: this project's own dev machine has a real, live example of why that matters: an old NVIDIA MX330 (Pascal architecture) that `torch.cuda.is_available()` reports as present, but that current PyTorch builds no longer ship compiled kernels for at all. Trusting the availability flag alone would pick a device that crashes on the very first real operation; `core/device.py` catches that and falls back to CPU cleanly instead.
 
-**VRAM-aware processing.** A GPU that passes the compatibility check can still run out of memory on a long video if it has limited VRAM. Demucs' processing segment length (which trades off directly against peak memory use) is chosen from the actual detected VRAM rather than assuming every GPU has a modern desktop card's headroom — a 2GB-class card gets a smaller segment automatically, not a crash partway through a real file.
+**VRAM-aware processing.** A GPU that passes the compatibility check can still run out of memory on a long video if it has limited VRAM. Demucs' processing segment length (which trades off directly against peak memory use) is chosen from the actual detected VRAM rather than assuming every GPU has a modern desktop card's headroom. A 2GB-class card gets a smaller segment automatically, not a crash partway through a real file.
 
 **Honesty about what's actually been verified, not just coded against documentation:**
 - CPU and NVIDIA/CUDA: exercised for real on this project's own dev machine.
@@ -36,7 +52,7 @@ The compute backend is chosen automatically, in this order: NVIDIA (CUDA), AMD (
 
 ## A note on old/incompatible GPUs
 
-If `torch.cuda.is_available()` reports `True` but the device fails the real verification check, that's usually not a speed problem — it's the installed PyTorch build having no compiled kernel for that specific GPU architecture at all, a hard incompatibility rather than a "runs slower" tradeoff. The legitimate way to salvage a genuinely old, unsupported GPU is building PyTorch from source with that GPU's exact compute capability included in `TORCH_CUDA_ARCH_LIST` — a real, heavier undertaking, not something this project attempts automatically. Worth doing if you have hardware like this and want to actually use it; not something to fake.
+If `torch.cuda.is_available()` reports `True` but the device fails the real verification check, that's usually not a speed problem. It's the installed PyTorch build having no compiled kernel for that specific GPU architecture at all, a hard incompatibility rather than a "runs slower" tradeoff. The legitimate way to salvage a genuinely old, unsupported GPU is building PyTorch from source with that GPU's exact compute capability included in `TORCH_CUDA_ARCH_LIST`, a real, heavier undertaking, not something this project attempts automatically. Worth doing if you have hardware like this and want to actually use it; not something to fake.
 
 ## Install
 
@@ -75,9 +91,9 @@ sudo apt install ffmpeg   # or brew install ffmpeg, or ffmpeg.org
 
 ## Status
 
-**Phase 1 complete (2026-08-18):** device selection, VRAM-aware segment sizing, and the full separation pipeline built, unit-tested (19 tests), and verified end-to-end with a real run — a synthetic test video (ffmpeg test pattern + two sine tones, no copyrighted content) went through extraction → Demucs separation → remux and produced a valid output video with both video and audio streams intact, on the CPU path.
+**Phase 1 complete (2026-08-18):** device selection, VRAM-aware segment sizing, and the full separation pipeline built, unit-tested (19 tests), and verified end-to-end with a real run: a synthetic test video (ffmpeg test pattern + two sine tones, no copyrighted content) went through extraction → Demucs separation → remux and produced a valid output video with both video and audio streams intact, on the CPU path.
 
-Two real bugs were caught only by that real run, not by the unit tests alone: the separation subprocess was calling the system `python3` instead of the virtualenv's own interpreter (so it couldn't find the installed `demucs` package), and the VRAM-based segment-length calculation rounded up to a whole-second value that exceeded `htdemucs`'s actual hard maximum (a Transformer-based model capped at 7.8s) instead of rounding down — both fixed, both now covered by regression tests.
+Two real bugs were caught only by that real run, not by the unit tests alone: the separation subprocess was calling the system `python3` instead of the virtualenv's own interpreter (so it couldn't find the installed `demucs` package), and the VRAM-based segment-length calculation rounded up to a whole-second value that exceeded `htdemucs`'s actual hard maximum (a Transformer-based model capped at 7.8s) instead of rounding down. Both fixed, both now covered by regression tests.
 
 **ROCm verified (2026-11-01)** on an AMD RX 6700 XT (12 GB): the 52 s Sintel trailer separated in 11.5 s on the GPU. **Phase 2 done:** a local web UI (`python web/app.py`, http://127.0.0.1:8610) takes videos up to 20 GB, one GPU job at a time. Long videos are fine: Demucs works through the audio in short segments, so length only costs RAM for the audio track (about 1.3 GB per hour of stereo, and a few times that while the stems are separated). Set `VOCALKEEP_WORKDIR` to a big disk if your `/tmp` lives in RAM. Not yet verified: the CUDA path (no working NVIDIA card here). Phases 3-4 (Chrome extension, live processing) not started.
 
