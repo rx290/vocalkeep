@@ -21,7 +21,7 @@
 <body>
 <h1>VocalKeep</h1>
 <p class="sub">Drop a video. The music goes, the voices stay. Everything runs on this computer.</p>
-<div class="drop" id="drop">Drag a video here, or click to choose one<br><small>mp4, mov, mkv, webm, avi, m4v, up to 2 GB</small>
+<div class="drop" id="drop">Drag a video here, or click to choose one<br><small>mp4, mov, mkv, webm, avi, m4v, up to 20 GB</small>
   <input type="file" id="file" accept="video/*" hidden></div>
 <div class="row"><label for="model">Model:</label>
   <select id="model"><option value="htdemucs">htdemucs (fast)</option><option value="htdemucs_ft">htdemucs_ft (better, about 4x slower)</option></select></div>
@@ -40,7 +40,7 @@ function start(files) {
   const f = files[0];
   if (!f) return;
   if (!OK.includes(f.name.split('.').pop().toLowerCase())) return say('That is not a video file I can read.');
-  if (f.size > 2 * 1024 ** 3) return say('That file is over 2 GB.');
+  if (f.size > 20 * 1024 ** 3) return say('That file is over 20 GB.');
   $('result').innerHTML = '';
   say('Uploading ' + f.name + ' ...');
   fetch('/api/jobs', { method: 'POST', body: f,

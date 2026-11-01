@@ -12,6 +12,7 @@ leaves this machine.
 import argparse
 import itertools
 import json
+import os
 import queue
 import shutil
 import sys
@@ -27,10 +28,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from core.separation import remove_music_from_video, DEFAULT_MODEL  # noqa: E402  core/__init__ sets the ROCm env first
 
 INDEX = Path(__file__).with_name("index.html")
-MAX_BYTES = 2 * 1024 ** 3
+MAX_BYTES = 20 * 1024 ** 3                               # a full movie; GPU work is chunked anyway
 VIDEO_EXT = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"}
 MODELS = {"htdemucs", "htdemucs_ft"}
 KEEP_SECONDS = 3600
+WORK = os.environ.get("VOCALKEEP_WORKDIR") or None          # e.g. a big disk; default: the system temp dir
 SEQ = itertools.count()
 
 
@@ -127,12 +129,12 @@ class Handler(BaseHTTPRequestHandler):
         name = Path(unquote(self.headers.get("X-Filename", ""))).name    # basename only: no path tricks
         model = self.headers.get("X-Model", DEFAULT_MODEL)
         if not 0 < size <= MAX_BYTES:
-            return self._json(413, {"error": "file must be 1 byte to 2 GB"})
+            return self._json(413, {"error": "file must be 1 byte to 20 GB"})
         if Path(name).suffix.lower() not in VIDEO_EXT:
             return self._json(415, {"error": "not a supported video type"})
         if model not in MODELS:
             return self._json(400, {"error": "unknown model"})
-        workdir = Path(tempfile.mkdtemp(prefix="vocalkeep_"))
+        workdir = Path(tempfile.mkdtemp(prefix="vocalkeep_", dir=WORK))     # on disk: /tmp is often RAM (tmpfs)
         src = workdir / name
         with open(src, "wb") as f:                           # stream to disk, never the whole file in RAM
             left = size
