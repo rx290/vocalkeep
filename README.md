@@ -23,7 +23,8 @@ The compute backend is chosen automatically, in this order: NVIDIA (CUDA), AMD (
 
 **Honesty about what's actually been verified, not just coded against documentation:**
 - CPU and NVIDIA/CUDA: exercised for real on this project's own dev machine.
-- AMD ROCm, Intel XPU, Apple MPS: written against each backend's real, documented PyTorch API, but not yet run on that actual hardware — none of it exists in this dev environment. Real code, honestly marked as unverified on that hardware until someone runs it there.
+- AMD ROCm: verified on an RX 6700 XT (gfx1031, ROCm 7.0, torch 2.10). A 52 s 480p trailer took 11.5 s end to end on the GPU, about 4.5x real time including model load; music-only stretches dropped from about 70 dB to near silence while the dialogue stayed. Cards like this one need `HSA_OVERRIDE_GFX_VERSION`, which `core/rocm_env.py` now sets automatically from the kernel's GPU topology (before torch loads) for RDNA2/RDNA3 consumer cards; a value you set yourself always wins.
+- Intel XPU, Apple MPS: written against each backend's real, documented PyTorch API, but not yet run on that actual hardware. Real code, honestly marked as unverified until someone runs it there.
 
 ## A note on old/incompatible GPUs
 
