@@ -97,6 +97,16 @@ Two real bugs were caught only by that real run, not by the unit tests alone: th
 
 **ROCm verified (2026-11-01)** on an AMD RX 6700 XT (12 GB): the 52 s Sintel trailer separated in 11.5 s on the GPU. **Phase 2 done:** a local web UI (`python web/app.py`, http://127.0.0.1:8610) takes videos up to 20 GB, one GPU job at a time. Long videos are fine: Demucs works through the audio in short segments, so length only costs RAM for the audio track (about 1.3 GB per hour of stereo, and a few times that while the stems are separated). Set `VOCALKEEP_WORKDIR` to a big disk if your `/tmp` lives in RAM. Not yet verified: the CUDA path (no working NVIDIA card here). Phases 3-4 (Chrome extension, live processing) not started.
 
+## How I built this
+
+Claude Code wrote most of the implementation here, 5 of the 6 commits. I set the plan (four phases, offline only), wrote the spec for each one, and ran every change on real hardware before calling it done.
+
+The main design rule came from my old laptop. Its NVIDIA MX330 says CUDA is available, but current torch builds have no kernels for it, so trusting that flag just fails later. The device picker now tries CUDA, ROCm, MPS and XPU in turn and runs a tiny real tensor op on each before it trusts it. That rule paid off again on my RX 6700 XT. It passed `torch.cuda.is_available()`, failed the real matmul, and every run quietly fell back to CPU. Now `core/rocm_env.py` reads the GPU target from the KFD topology and sets `HSA_OVERRIDE_GFX_VERSION` before torch loads. The 52 s Sintel trailer takes 11.5 s on the GPU.
+
+The first full run also caught two things the unit tests missed. The separation step was calling the system `python3` instead of the venv's, and the segment length rounded up past htdemucs's 7.8 s limit. Both have regression tests now.
+
+What I can't vouch for yet: the Intel and Apple paths. I don't own that hardware.
+
 ## Author
 
 **Muhammad Asad Waseem**, [github.com/rx290](https://github.com/rx290)
