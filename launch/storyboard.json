@@ -1,0 +1,70 @@
+{
+ "title": "VocalKeep",
+ "tagline": "Strip music, keep speech offline",
+ "scenes": [
+  {
+   "kind": "title",
+   "heading": "VocalKeep",
+   "bullets": [],
+   "image": null,
+   "voice": "Hey, I\u2019ve been playing with a tool that strips music from videos while keeping the speech. Let me show you."
+  },
+  {
+   "kind": "problem",
+   "heading": "Music drowns dialogue",
+   "bullets": [
+    "Reels with background tracks",
+    "Hard to hear speech"
+   ],
+   "image": null,
+   "voice": "Ever watched a short where the beat covers the speaker? It\u2019s frustrating."
+  },
+  {
+   "kind": "bullets",
+   "heading": "What it does",
+   "bullets": [
+    "Extracts audio with ffmpeg",
+    "Separates vocals via Demucs",
+    "Remuxes clean audio into video"
+   ],
+   "image": null,
+   "voice": "The pipeline runs locally, no cloud, and gives you a speech\u2011only clip."
+  },
+  {
+   "kind": "image",
+   "heading": "Local web UI",
+   "bullets": [],
+   "image": "assets/banner-dark.svg",
+   "voice": "You can open a tiny web page, drag a video, pick a model, and download the cleaned result."
+  },
+  {
+   "kind": "bullets",
+   "heading": "Hardware support",
+   "bullets": [
+    "Auto selects GPU or CPU",
+    "VRAM aware segment sizing",
+    "Supports NVIDIA, AMD ROCm, Apple MPS"
+   ],
+   "image": null,
+   "voice": "It checks each device with a tiny tensor before trusting it, so older cards fall back to CPU safely."
+  },
+  {
+   "kind": "bullets",
+   "heading": "Project roadmap",
+   "bullets": [
+    "Phase 1: offline CLI done",
+    "Phase 2: local web UI done",
+    "Phase 3: Chrome extension planned"
+   ],
+   "image": null,
+   "voice": "We\u2019ve already shipped the core engine and a web UI; the next step is a Chrome extension for right\u2011click processing."
+  },
+  {
+   "kind": "cta",
+   "heading": "Try it yourself",
+   "bullets": [],
+   "image": null,
+   "voice": "Check out the repository on GitHub, clone it, and run the local server to clean your videos today."
+  }
+ ]
+}

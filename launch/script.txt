@@ -1,0 +1,13 @@
+Hey, I’ve been playing with a tool that strips music from videos while keeping the speech. Let me show you.
+
+Ever watched a short where the beat covers the speaker? It’s frustrating.
+
+The pipeline runs locally, no cloud, and gives you a speech‑only clip.
+
+You can open a tiny web page, drag a video, pick a model, and download the cleaned result.
+
+It checks each device with a tiny tensor before trusting it, so older cards fall back to CPU safely.
+
+We’ve already shipped the core engine and a web UI; the next step is a Chrome extension for right‑click processing.
+
+Check out the repository on GitHub, clone it, and run the local server to clean your videos today.
